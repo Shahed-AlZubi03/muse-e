@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker cp *)",
+      "Bash(docker exec museum-guide-chatbot-mongo-1 mongosh museum-guide --quiet --eval ' *)",
+      "Bash(npm start *)",
+      "Bash(MONGODB_URI=\"mongodb://localhost:27017/museum-guide\" npm start)",
+      "Bash(curl -s -o /dev/null -w \"GET / -> %{http_code}\\\\n\" http://localhost:3000/)"
+    ]
+  }
+}

@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Musée — My Gallery</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg-primary: #0a0a0a;
+      --bg-secondary: #141414;
+      --bg-tertiary: #1c1c1c;
+      --bg-elevated: #242424;
+      --text-primary: #f5f0e8;
+      --text-secondary: #a8a29e;
+      --text-muted: #6b6560;
+      --accent: #c9a84c;
+      --accent-dim: rgba(201, 168, 76, 0.15);
+      --accent-glow: rgba(201, 168, 76, 0.08);
+      --border: rgba(255, 255, 255, 0.06);
+      --border-accent: rgba(201, 168, 76, 0.3);
+      --serif: 'Playfair Display', Georgia, serif;
+      --sans: 'Inter', -apple-system, sans-serif;
+      --radius: 12px;
+      --transition: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    html, body {
+      min-height: 100vh;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: var(--sans);
+      font-weight: 300;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* === HEADER === */
+    .header {
+      display: flex;
+      align-items: center;
+      padding: 20px 40px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: var(--bg-primary);
+      z-index: 100;
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .header-brand-logo {
+      height: 44px;
+      width: auto;
+      object-fit: contain;
+    }
+
+    .header-title {
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 400;
+      letter-spacing: 0.02em;
+    }
+
+    .header-subtitle {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--text-muted);
+    }
+
+    .header-nav {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-nav-link {
+      font-family: var(--sans);
+      font-size: 12px;
+      color: var(--text-muted);
+      background: none;
+      border: 1px solid var(--border);
+      padding: 6px 14px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.2s var(--transition);
+      text-decoration: none;
+    }
+
+    .header-nav-link:hover {
+      color: var(--text-secondary);
+      border-color: var(--text-muted);
+    }
+
+    #exportPdfBtn {
+      color: var(--accent);
+      border-color: var(--border-accent);
+    }
+
+    #exportPdfBtn:hover:not(:disabled) {
+      color: var(--accent);
+      background: var(--accent-dim);
+      border-color: var(--accent);
+    }
+
+    #exportPdfBtn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* === MAIN CONTENT === */
+    .main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 48px 40px;
+    }
+
+    .page-title {
+      font-family: var(--serif);
+      font-size: 32px;
+      font-weight: 400;
+      margin-bottom: 8px;
+    }
+
+    .page-subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 40px;
+    }
+
+    /* === GALLERY GRID === */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+    }
+
+    .gallery-empty {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 80px 40px;
+      color: var(--text-muted);
+    }
+
+    .gallery-empty h3 {
+      font-family: var(--serif);
+      font-size: 22px;
+      font-weight: 400;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+    }
+
+    .gallery-empty p {
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* === ARTWORK CARD === */
+    .artwork-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      transition: all 0.3s var(--transition);
+    }
+
+    .artwork-card-image,
+    .artwork-card-image-placeholder {
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+
+    .artwork-card-image {
+      width: 100%;
+      aspect-ratio: 4/3;
+      object-fit: cover;
+      display: block;
+      background: var(--bg-elevated);
+    }
+
+    .artwork-card-image-placeholder {
+      width: 100%;
+      aspect-ratio: 4/3;
+      background: var(--bg-elevated);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .artwork-card-image-placeholder svg {
+      width: 40px;
+      height: 40px;
+      color: var(--text-muted);
+      opacity: 0.3;
+    }
+
+    .artwork-card-body {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .artwork-card:hover {
+      border-color: var(--border-accent);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .artwork-card:hover .artwork-card-image {
+      transform: scale(1.02);
+      transition: transform 0.4s var(--transition);
+    }
+
+    .artwork-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .artwork-card-info { flex: 1; }
+
+    .artwork-card-title {
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 400;
+      font-style: italic;
+      margin-bottom: 4px;
+    }
+
+    .artwork-card-artist {
+      font-size: 14px;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+
+    .artwork-card-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .artwork-card-badge {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      background: var(--bg-elevated);
+      padding: 4px 10px;
+      border-radius: 12px;
+    }
+
+    .artwork-card-badge.movement {
+      color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    .artwork-card-remove {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      transition: all 0.2s var(--transition);
+      line-height: 0;
+    }
+
+    .artwork-card-remove:hover {
+      color: #e57373;
+      background: rgba(229, 115, 115, 0.1);
+    }
+
+    .artwork-card-remove svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* === AI SUMMARY === */
+    .artwork-card-summary {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      padding: 12px 14px;
+      background: var(--bg-tertiary);
+      border-left: 2px solid var(--border-accent);
+      border-radius: 0 6px 6px 0;
+    }
+
+    .artwork-card-summary-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--accent);
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+
+    /* === PERSONAL NOTE === */
+    .artwork-card-note {
+      position: relative;
+    }
+
+    .artwork-card-note-input {
+      width: 100%;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 300;
+      color: var(--text-primary);
+      outline: none;
+      resize: none;
+      min-height: 40px;
+      transition: border-color 0.2s var(--transition);
+    }
+
+    .artwork-card-note-input::placeholder { color: var(--text-muted); }
+    .artwork-card-note-input:focus { border-color: var(--border-accent); }
+
+    .artwork-card-note-status {
+      position: absolute;
+      right: 10px;
+      bottom: 8px;
+      font-size: 10px;
+      color: var(--accent);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .artwork-card-note-status.visible { opacity: 1; }
+
+    /* === CARD FOOTER === */
+    .artwork-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .artwork-card-date {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .artwork-card-museum {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: right;
+    }
+
+    /* === RESPONSIVE === */
+    @media (max-width: 768px) {
+      .gallery-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .main {
+        padding: 32px 20px;
+      }
+
+      .header {
+        padding: 16px 20px;
+      }
+
+      .taste-bar-label {
+        min-width: 100px;
+        font-size: 12px;
+      }
+
+      .page-title {
+        font-size: 26px;
+      }
+    }
+
+    /* === LOADING STATE === */
+    .loading-state {
+      text-align: center;
+      padding: 60px;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .artwork-card {
+      animation: fadeIn 0.4s var(--transition) forwards;
+      opacity: 0;
+    }
+
+    .artwork-card:nth-child(1) { animation-delay: 0.05s; }
+    .artwork-card:nth-child(2) { animation-delay: 0.1s; }
+    .artwork-card:nth-child(3) { animation-delay: 0.15s; }
+    .artwork-card:nth-child(4) { animation-delay: 0.2s; }
+    .artwork-card:nth-child(5) { animation-delay: 0.25s; }
+    .artwork-card:nth-child(6) { animation-delay: 0.3s; }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-brand">
+      <img src="musee-icon.png" alt="Musée logo" class="header-brand-logo" onerror="this.style.display='none'" />
+      <div>
+        <div class="header-title">Musée</div>
+        <div class="header-subtitle">Personal Gallery</div>
+      </div>
+    </div>
+    <nav class="header-nav">
+      <button id="exportPdfBtn" class="header-nav-link" type="button" disabled>Export as PDF</button>
+      <a href="/index.html" class="header-nav-link">← Back to Chat</a>
+    </nav>
+  </header>
+
+  <main class="main">
+    <h1 class="page-title">My Gallery</h1>
+    <p class="page-subtitle">Your personal collection of explored artworks</p>
+
+    <!-- Gallery Grid -->
+    <section class="gallery-grid" id="galleryGrid">
+      <div class="loading-state">Loading your gallery...</div>
+    </section>
+  </main>
+
+  <!-- jsPDF (UMD) for client-side PDF generation — vendored locally to satisfy the app's CSP (script-src 'self') -->
+  <script src="/vendor/jspdf.umd.min.js"></script>
+
+  <script type="module">
+    import { exportGalleryToPdf } from './pdf-export.js'
+
+    // === AUTH ===
+    const token = localStorage.getItem('muse_token')
+    const currentUser = JSON.parse(localStorage.getItem('muse_user') || 'null')
+
+    // Holds the latest fetched gallery so the PDF export can reuse it.
+    let currentArtworks = []
+
+    // === FETCH GALLERY DATA ===
+    async function loadGallery() {
+      try {
+        const res = await fetch('/api/gallery', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        if (res.status === 401) {
+          document.getElementById('galleryGrid').innerHTML =
+            '<div class="gallery-empty"><h3>Session expired</h3><p>Please sign in again from the chat page.</p></div>'
+          return
+        }
+        const data = await res.json()
+
+        currentArtworks = data.savedArtworks || []
+        renderGalleryGrid(currentArtworks)
+        updateExportButton()
+      } catch (err) {
+        document.getElementById('galleryGrid').innerHTML =
+          '<div class="gallery-empty"><h3>Unable to load gallery</h3><p>Please check your connection and try again.</p></div>'
+      }
+    }
+
+    // === RENDER GALLERY GRID ===
+    function renderGalleryGrid(artworks) {
+      const grid = document.getElementById('galleryGrid')
+
+      if (artworks.length === 0) {
+        grid.innerHTML = `
+          <div class="gallery-empty">
+            <h3>Your gallery is empty</h3>
+            <p>Start exploring artworks in the chat and save the ones you love to see them here.</p>
+          </div>
+        `
+        return
+      }
+
+      grid.innerHTML = artworks.map(item => {
+        const art = item.artworkId
+        if (!art) return ''
+
+        const displayImage = item.imageUrl || art.imageUrl
+
+        const savedDate = new Date(item.savedAt).toLocaleDateString('en-US', {
+          month: 'short', day: 'numeric', year: 'numeric'
+        })
+
+        return `
+          <div class="artwork-card" data-artwork-id="${art._id}">
+            ${displayImage
+              ? `<img class="artwork-card-image" src="${escapeHtml(displayImage)}" alt="${escapeHtml(art.title)}" loading="lazy" />`
+              : `<div class="artwork-card-image-placeholder">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                    <polyline points="21 15 16 10 5 21"/>
+                  </svg>
+                </div>`
+            }
+            <div class="artwork-card-body">
+            <div class="artwork-card-header">
+              <div class="artwork-card-info">
+                <div class="artwork-card-title">${escapeHtml(art.title)}</div>
+                <div class="artwork-card-artist">${escapeHtml(art.artist)}</div>
+                <div class="artwork-card-meta">
+                  ${art.movement ? `<span class="artwork-card-badge movement">${escapeHtml(art.movement)}</span>` : ''}
+                  ${art.year ? `<span class="artwork-card-badge">${art.year}</span>` : ''}
+                </div>
+              </div>
+              <button class="artwork-card-remove" onclick="removeArtwork('${art._id}', event)" title="Remove from gallery">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                </svg>
+              </button>
+            </div>
+            <div class="artwork-card-note">
+              ${item.aiSummary ? `
+              <div class="artwork-card-summary-label">AI Summary</div>
+              <div class="artwork-card-summary">${escapeHtml(item.aiSummary)}</div>
+              ` : ''}
+              <textarea
+                class="artwork-card-note-input"
+                placeholder="Add a personal note..."
+                data-artwork-id="${art._id}"
+                onblur="saveNote(this)"
+              >${escapeHtml(item.personalNote || '')}</textarea>
+              <span class="artwork-card-note-status" id="noteStatus-${art._id}">Saved</span>
+            </div>
+            <div class="artwork-card-footer">
+              <span class="artwork-card-date">Saved ${savedDate}</span>
+              ${art.museum ? `<span class="artwork-card-museum">${escapeHtml(art.museum)}</span>` : ''}
+            </div>
+            </div>
+          </div>
+        `
+      }).join('')
+    }
+
+    // === REMOVE ARTWORK ===
+    async function removeArtwork(artworkId, event) {
+      if (event) event.stopPropagation()
+
+      const btn = event?.currentTarget
+      if (!confirm('Remove this artwork from your gallery?')) return
+
+      if (btn) {
+        btn.disabled = true
+        btn.style.opacity = '0.5'
+      }
+
+      try {
+        const res = await fetch(`/api/gallery/${artworkId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+
+        if (res.ok) {
+          // Remove card from DOM with animation
+          const card = document.querySelector(`[data-artwork-id="${artworkId}"]`)
+          if (card) {
+            card.style.opacity = '0'
+            card.style.transform = 'scale(0.95)'
+            setTimeout(() => {
+              card.remove()
+              // Reload to refresh taste profile
+              loadGallery()
+            }, 300)
+          }
+        } else {
+          const data = await res.json().catch(() => ({}))
+          alert(data.error || 'Failed to remove artwork.')
+          if (btn) { btn.disabled = false; btn.style.opacity = '' }
+        }
+      } catch (err) {
+        alert('Network error. Please try again.')
+        if (btn) { btn.disabled = false; btn.style.opacity = '' }
+      }
+    }
+
+    // === SAVE NOTE ===
+    async function saveNote(textarea) {
+      const artworkId = textarea.dataset.artworkId
+      const note = textarea.value.trim()
+      const statusEl = document.getElementById(`noteStatus-${artworkId}`)
+
+      try {
+        const res = await fetch(`/api/gallery/${artworkId}/note`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ note })
+        })
+
+        if (res.ok) {
+          statusEl.classList.add('visible')
+          setTimeout(() => statusEl.classList.remove('visible'), 2000)
+        }
+      } catch (err) {
+        // Silently fail for note saves
+      }
+    }
+
+    // === EXPORT AS PDF ===
+    const exportBtn = document.getElementById('exportPdfBtn')
+
+    function updateExportButton() {
+      // Disable when the gallery is empty — nothing to export.
+      exportBtn.disabled = currentArtworks.length === 0
+    }
+
+    exportBtn.addEventListener('click', async () => {
+      if (currentArtworks.length === 0) return
+
+      const original = exportBtn.textContent
+      exportBtn.disabled = true
+      exportBtn.textContent = 'Preparing…'
+
+      try {
+        const username = (currentUser && currentUser.name) || 'guest'
+        await exportGalleryToPdf(currentArtworks, username)
+      } catch (err) {
+        console.error('PDF export failed:', err)
+        alert('Could not generate the PDF. Please try again.')
+      } finally {
+        exportBtn.textContent = original
+        updateExportButton()
+      }
+    })
+
+    // === UTILITY ===
+    function escapeHtml(text) {
+      const div = document.createElement('div')
+      div.textContent = text
+      return div.innerHTML
+    }
+
+    // Inline handlers in the rendered cards (onclick/onblur) need global
+    // scope; this script is a module, so expose them explicitly.
+    // Must happen BEFORE loadGallery() so the rendered handlers can find them.
+    window.removeArtwork = removeArtwork
+    window.saveNote = saveNote
+
+    // === INIT ===
+    loadGallery()
+  </script>
+</body>
+</html>
