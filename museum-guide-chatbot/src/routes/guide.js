@@ -15,6 +15,19 @@ if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true })
 const router = express.Router()
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } })
 
+// Browsers can report a generic or wrong Content-Type (drag-and-drop, HEIC from
+// iOS, odd extensions), and OpenAI rejects anything outside png/jpeg/gif/webp.
+// Trust the file's magic bytes over the client-supplied mimetype.
+function detectImageMime(buffer) {
+  if (buffer.length < 12) return null
+  if (buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) return 'image/jpeg'
+  if (buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) return 'image/png'
+  if (buffer.subarray(0, 6).toString('latin1').match(/^GIF8[79]a$/)) return 'image/gif'
+  if (buffer.subarray(0, 4).toString('latin1') === 'RIFF' &&
+      buffer.subarray(8, 12).toString('latin1') === 'WEBP') return 'image/webp'
+  return null
+}
+
 router.post('/ask', authGuard, upload.single('image'), async (req, res) => {
   try {
     const userId = req.user._id
@@ -39,7 +52,12 @@ router.post('/ask', authGuard, upload.single('image'), async (req, res) => {
     let artworkRaw = session?.artworkRaw
     if (!session) {
       const imageBase64 = req.file.buffer.toString('base64')
-      const mimeType = req.file.mimetype
+      const mimeType = detectImageMime(req.file.buffer)
+      if (!mimeType) {
+        return res.status(400).json({
+          error: 'Unsupported image format. Please upload a JPEG, PNG, GIF, or WebP image.',
+        })
+      }
 
       artworkRaw = await callClaudeVision(imageBase64, mimeType, `
         Identify this artwork. Respond in JSON only with these fields:
@@ -66,7 +84,7 @@ router.post('/ask', authGuard, upload.single('image'), async (req, res) => {
 
     // --- Step 3b: Persist the uploaded image immediately (first turn only) ---
     if (req.file && artwork && !artwork.imageUrl) {
-      const ext  = req.file.mimetype === 'image/png' ? '.png' : '.jpg'
+      const ext  = { 'image/png': '.png', 'image/gif': '.gif', 'image/webp': '.webp' }[detectImageMime(req.file.buffer)] || '.jpg'
       const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`
       fs.writeFileSync(path.join(uploadsDir, filename), req.file.buffer)
       artwork = await Artwork.findByIdAndUpdate(
